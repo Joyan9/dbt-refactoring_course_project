@@ -34,3 +34,9 @@ models:
     
     legacy:
       +materialized: view
+    
+    marts:
+      +materialized: view
+
+    staging:
+      +materialized: view
