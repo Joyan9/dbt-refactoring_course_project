@@ -3,5 +3,5 @@ sources:
     - name: jaffle_shop
       database: bvg-open-data-project 
       tables:
-        - name: customers
+        - name: customer
         - name: orders
