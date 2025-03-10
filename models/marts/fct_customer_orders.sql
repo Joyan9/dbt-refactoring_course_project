@@ -1,4 +1,16 @@
-with paid_orders as (
+/*Import CTE - data sources used in this model*/
+WITH base_orders AS (
+    SELECT * FROM {{ ref('stg__orders') }}
+),
+base_payments AS (
+    SELECT * FROM {{ ref('stg__payments') }}
+),
+base_customers AS (
+    SELECT * FROM {{ ref('stg__customers') }}
+),
+
+/*Logical CTEs - transformations*/
+paid_orders as (
     select 
         orders.id as order_id,
         orders.user_id as customer_id,
@@ -8,17 +20,17 @@ with paid_orders as (
         p.payment_finalized_date,
         c.first_name as customer_first_name,
         c.last_name as customer_last_name
-    from {{ ref('stg__orders') }} as orders
+    from base_orders as orders
     left join (
         select 
             orderid as order_id, 
             max(created) as payment_finalized_date, 
             sum(amount) / 100.0 as total_amount_paid
-        from {{ ref('stg__payments') }}
+        from base_payments
         where status <> 'fail'
         group by orderid
     ) p on orders.id = p.order_id
-    left join {{ ref('stg__customers') }} c on orders.user_id = c.id
+    left join base_customers c on orders.user_id = c.id
 ),
 
 customer_orders as (
@@ -27,8 +39,8 @@ customer_orders as (
         min(order_date) as first_order_date,
         max(order_date) as most_recent_order_date,
         count(orders.id) as number_of_orders
-    from {{ ref('stg__customers') }} c 
-    left join {{ ref('stg__orders') }} as orders on orders.user_id = c.id 
+    from base_customers c 
+    left join base_orders as orders on orders.user_id = c.id 
     group by c.id
 )
 
